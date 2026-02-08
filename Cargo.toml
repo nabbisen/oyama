@@ -41,5 +41,8 @@ tokio = { version = "1.49", default-features = false, features = ["fs"] }
 candle-core = "0.9"
 candle-nn = "0.9"
 candle-transformers = "0.9" # 一般的なモデルの実装が含まれる
-image = "0"
+image = { version = "0", default-features = false, features = ["png"] }
 anyhow = "1"
+
+mp4 = "0.14"
+openh264 = "0.9"

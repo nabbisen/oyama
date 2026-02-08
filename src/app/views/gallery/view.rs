@@ -1,9 +1,11 @@
+use iced::widget::image::Handle;
 use iced::widget::{
     Responsive, column, container, image, mouse_area, row, scrollable, space, text,
 };
 use iced::{Element, Length, Size};
 use swdir::DirNode;
 
+use crate::app::utils::gallery::codec::extract_frame;
 use crate::app::utils::gallery::image_similarity::ImageSimilarity;
 
 use super::{Gallery, message::Message};
@@ -124,23 +126,35 @@ fn image_columns<'a>(
                     }
                 })
                 .map(|path| {
-                    // 画像ウィジェットの作成
-                    // ContentFit::Coverで正方形にトリミング表示
-                    let image = image(path.as_path())
+                    let (width, height, rgba) = match extract_frame(&path.as_path(), 60.0) {
+                        Ok(x) => x,
+                        Err(err) => {
+                            eprintln!("{}", err);
+                            return container(text(path.to_string_lossy()))
+                                .width(thumbnail_size)
+                                .height(thumbnail_size)
+                                .into();
+                        }
+                    };
+
+                    let handle = Handle::from_rgba(width, height, rgba);
+
+                    let image = image(handle)
                         .width(thumbnail_size)
                         .height(thumbnail_size)
                         .content_fit(iced::ContentFit::Cover);
-                    let image_similarity =
-                        if let Some(image_similarity) = image_similarity.get_score(path) {
-                            image_similarity.to_string()
-                        } else {
-                            "".into()
-                        };
-                    column![
-                        mouse_area(image).on_double_click(Message::ImageSelect(path.clone())),
-                        text(image_similarity)
-                    ]
-                    .into()
+                    // let image_similarity =
+                    //     if let Some(image_similarity) = image_similarity.get_score(path) {
+                    //         image_similarity.to_string()
+                    //     } else {
+                    //         "".into()
+                    //     };
+                    // column![
+                    //     mouse_area(image).on_double_click(Message::ImageSelect(path.clone())),
+                    //     text(image_similarity)
+                    // ]
+                    // .into()
+                    container(image).into()
                 })
                 .collect();
 
